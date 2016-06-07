@@ -1,0 +1,52 @@
+#! /bin/bash
+
+# %%% Requires: ios-deploy (to install built app on device), terminal-notification (optional, to get a notification when build is done)
+# %%% Put this file in <APPDIR>/script/
+
+# %%% SPECIFY THE NAME OF YOUR APP %%%
+APPNAME="Pilloxa"
+
+cd "$(dirname "$0")"
+cd ..
+dir="$(pwd)/target/appios"
+mkdir -p "$dir"
+
+
+# Checks that ios-deploy is installed
+if ! which ios-deploy > /dev/null ; then
+    echo "ios-deploy not installed"
+    echo "install with npm -g install ios-deploy"
+    exit
+fi
+
+# Checks if React Packager is already running
+if curl -s --head http://localhost:8081/debugger-ui | head -n 1 | grep "HTTP/1.[01] [23].." > /dev/null; then
+    echo "RN Packager running, exit it first"
+    exit
+fi
+
+
+# Builds cljs to js
+lein prod-build
+
+# Enables local js code location
+sed -i '' 's/ \/\/ jsCodeLocation = \[\[NSBundle / jsCodeLocation \= \[\[NSBundle /g' ios/"$APPNAME"/AppDelegate.m
+sed -i '' 's/  jsCodeLocation = \[NSURL / \/\/ jsCodeLocation \= \[NSURL /g' ios/"$APPNAME"/AppDelegate.m
+
+# Bundles js code (unsure if necessary)
+react-native bundle --platform ios --dev false --entry-file index.ios.js --bundle-output ios/main.jsbundle --resetCache &&
+
+# Builds project
+xcodebuild -project ios/"$APPNAME".xcodeproj -scheme Release -destination generic/platform=iOS build CONFIGURATION_BUILD_DIR="$dir" &&
+
+# Installs app on device
+ios-deploy --bundle "$dir"/"$APPNAME".app &&
+
+# If terminal-notifier is installed, fire a notification
+if which terminal-notifier; then
+    terminal-notifier  -message "App built to iOS Device" -sound default
+fi
+
+# Restore code location to be served from server
+sed -i '' 's/ jsCodeLocation \= \[\[NSBundle / \/\/ jsCodeLocation = \[\[NSBundle /g' ios/"$APPNAME"/AppDelegate.m
+sed -i '' 's/ \/\/ jsCodeLocation \= \[NSURL /  jsCodeLocation = \[NSURL /g' ios/"$APPNAME"/AppDelegate.m
