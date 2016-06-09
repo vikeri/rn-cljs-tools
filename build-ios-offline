@@ -1,0 +1,88 @@
+#! /bin/bash
+
+
+usage() { 
+    echo "
+    Usage: $0 [-t re-natal] [-a <string>]
+    
+    -t Type of tool: re-natal
+    -a The name of your app (<APPNAME>.xcodeproj)
+    "
+    exit 1; }
+
+while getopts ":t:a:" o; do
+    case "${o}" in
+        t)
+            TOOL=${OPTARG}
+            ;;
+        a)
+            APPNAME=${OPTARG}
+            ;;
+        *)
+            usage
+            ;;
+    esac
+done
+shift $((OPTIND-1))
+
+if [ -z "${APPNAME}" ] || [ -z "${TOOL}" ]; then
+    usage
+fi
+
+
+case "$TOOL" in 
+    re-natal)
+        DIR="$(pwd)/target/appios"
+        ;;
+esac
+
+mkdir -p "$DIR"   
+
+echo $DIR
+
+# Checks that ios-deploy is installed
+if ! which ios-deploy > /dev/null ; then
+    echo "ios-deploy not installed"
+    echo "install with npm -g install ios-deploy"
+    exit
+fi
+
+# Checks if React Packager is already running
+if curl -s --head http://localhost:8081/debugger-ui | head -n 1 | grep "HTTP/1.[01] [23].." > /dev/null; then
+    echo "RN Packager running, exit it first"
+    exit
+fi
+
+# Builds cljs
+case "$TOOL" in 
+    re-natal)
+        lein prod-build
+        ;;
+esac
+
+
+# Enables local js code location
+sed -i '' 's/ \/\/ jsCodeLocation = \[\[NSBundle / jsCodeLocation \= \[\[NSBundle /g' ios/"$APPNAME"/AppDelegate.m
+sed -i '' 's/  jsCodeLocation = \[NSURL / \/\/ jsCodeLocation \= \[NSURL /g' ios/"$APPNAME"/AppDelegate.m
+
+# Builds project
+xcodebuild -project ios/"$APPNAME".xcodeproj -scheme Release -destination generic/platform=iOS build CONFIGURATION_BUILD_DIR="$DIR" &&  
+
+# Installs app on device
+ios-deploy --bundle "$DIR"/"$APPNAME".app &&
+
+# If terminal-notifier is installed, fire a notification
+if which terminal-notifier; then
+    terminal-notifier  -message "App built to iOS Device" -sound default
+fi
+
+# Restore code location to be served from server
+sed -i '' 's/ jsCodeLocation \= \[\[NSBundle / \/\/ jsCodeLocation = \[\[NSBundle /g' ios/"$APPNAME"/AppDelegate.m
+sed -i '' 's/ \/\/ jsCodeLocation \= \[NSURL /  jsCodeLocation = \[NSURL /g' ios/"$APPNAME"/AppDelegate.m
+
+# Things do clean up after build
+case "$TOOL" in 
+    re-natal)
+        re-natal use-figwheel
+        ;;
+esac
