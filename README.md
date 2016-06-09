@@ -30,6 +30,7 @@ Start with building the project once from XCode to your device (to add team etc.
     
     -t Type of tool: re-natal
     -a The name of your app (<APPNAME>.xcodeproj)
+    -s XCode build scheme, default scheme is app name (optional)
 ```
 
 
