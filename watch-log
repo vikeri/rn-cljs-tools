@@ -1,0 +1,50 @@
+#!/bin/bash
+
+usage() { 
+    echo "
+    Usage: $0 [-s <bool>] [-f <string>]
+    
+    -s Make a sound each time the build fails or generates a warning. default: true
+    -f File path to cljs log-file. default: figwheel_server.log
+    "
+    exit 1; }
+
+while getopts ":f:s:" o; do
+    case "${o}" in
+        s)
+            SOUND=${OPTARG}
+            ;;
+        f)
+            LOGFILE=${OPTARG}
+            ;;
+        *)
+            usage
+            ;;
+    esac
+done
+shift $((OPTIND-1))
+
+if [ -z "${SOUND}"]; then
+ SOUND=true
+fi
+
+if [ -z "${LOGFILE}"]; then
+ LOGFILE="figwheel_server.log"
+fi
+
+
+
+tail -fn0 $LOGFILE | \
+while read line ; do
+    echo "$line" | grep -q -E "WARNING|ERROR"
+    if [ $? = 0 ]
+    then
+        echo $(date "+%H:%M:%S") - $line
+        if $SOUND; then
+            tput bel
+        fi
+        if which terminal-notifier; then
+            terminal-notifier -message "$line"
+        fi
+    fi
+done

@@ -25,6 +25,8 @@ Requires [ios-deploy](https://github.com/phonegap/ios-deploy)
 
 Start with building the project once from XCode to your device (to add team etc.) and use this from then on.
 
+If [terminal-notifer](https://github.com/julienXX/terminal-notifier) is installed, it will fire a notification if the build is successful.
+
 ```
     Usage: build-ios-offline [-t re-natal] [-a <string>]
     
@@ -33,6 +35,17 @@ Start with building the project once from XCode to your device (to add team etc.
     -s XCode build scheme, default scheme is app name (optional)
 ```
 
+### Watch Clojurescript build log
+`watch-log`
+
+This prints errors or warnings to the terminal with an added timestamp, when warnings or erros occur it will optionally also make a sound and if [terminal-notifer](https://github.com/julienXX/terminal-notifier) is installed, it will fire a notification.
+
+```
+    Usage: watch-log [-s <bool>] [-f <string>]
+    
+    -s Make a sound each time the build fails or generates a warning. default: true
+    -f File path to cljs log-file. default: figwheel_server.log
+```
 
 
 ## Planned features
