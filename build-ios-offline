@@ -65,7 +65,7 @@ fi
 # Builds cljs
 case "$TOOL" in 
     re-natal)
-        # lein prod-build
+         lein prod-build
         ;;
 esac
 
