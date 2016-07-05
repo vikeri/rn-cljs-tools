@@ -33,7 +33,7 @@ if [ -z "${APPNAME}" ] || [ -z "${TOOL}" ]; then
     usage
 fi
 
-if [ -z "${SCHEME}"]; then
+if [ -z "${SCHEME}" ]; then
  SCHEME="$APPNAME"
 fi
 
@@ -72,7 +72,7 @@ esac
 
 # Enables local js code location
 sed -i '' 's/ \/\/ jsCodeLocation = \[\[NSBundle / jsCodeLocation \= \[\[NSBundle /g' ios/"$APPNAME"/AppDelegate.m
-sed -i '' 's/  jsCodeLocation = \[NSURL / \/\/ jsCodeLocation \= \[NSURL /g' ios/"$APPNAME"/AppDelegate.m
+sed -i '' 's/  jsCodeLocation = \[NSURL / \/\/jsCodeLocation \= \[NSURL /g' ios/"$APPNAME"/AppDelegate.m
 
 # Builds project
 xcodebuild -project ios/"$APPNAME".xcodeproj -scheme "$SCHEME" -destination generic/platform=iOS build CONFIGURATION_BUILD_DIR="$DIR" &&  
@@ -87,7 +87,7 @@ fi
 
 # Restore code location to be served from server
 sed -i '' 's/ jsCodeLocation \= \[\[NSBundle / \/\/ jsCodeLocation = \[\[NSBundle /g' ios/"$APPNAME"/AppDelegate.m
-sed -i '' 's/ \/\/ jsCodeLocation \= \[NSURL /  jsCodeLocation = \[NSURL /g' ios/"$APPNAME"/AppDelegate.m
+sed -i '' 's/ \/\/jsCodeLocation \= \[NSURL /  jsCodeLocation = \[NSURL /g' ios/"$APPNAME"/AppDelegate.m
 
 # Things do clean up after build
 case "$TOOL" in 
