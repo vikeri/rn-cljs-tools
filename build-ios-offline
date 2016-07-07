@@ -65,7 +65,8 @@ fi
 # Builds cljs
 case "$TOOL" in 
     re-natal)
-         lein prod-build
+				 lein clean
+         lein with-profile prod cljsbuild once ios
         ;;
 esac
 
